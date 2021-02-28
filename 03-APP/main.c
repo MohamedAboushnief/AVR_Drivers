@@ -23,6 +23,9 @@
 #include "Timer0.h"
 #include <avr/interrupt.h>
 
+
+#define BAUD_PRESCALE (103)
+
 u8 no_of_overflow=0;
 u8 no_of_count=0;
 u16 value;
@@ -145,33 +148,106 @@ static void configure_PWM(){
 }
 
 
+
+
+
+
+
+void SPI_Init()					/* SPI Initialize function */
+{
+	DDRB &= ~((1<<5)|(1<<7)|(1<<4));  /* Make MOSI, SCK, SS as
+ 						input pins */
+	DDRB |= (1<<6);			/* Make MISO pin as
+						output pin */
+	SPCR = (1<<SPE);			/* Enable SPI in slave mode */
+}
+
+u8 SPI_Receive()			/* SPI Receive data function */
+{
+	while(!(SPSR & (1<<SPIF)));	/* Wait till reception complete */
+	return(SPDR);			/* Return received data */
+}
+
 int main(void){
-	u8 buffer[10];
-
-
-	u16 value;
-	Adc_Configure(AVCC, DIV_FACTOR_128, ADC_POLLING);
-	Adc_Channel_Sel(ADC1);
-
-	LCD_Init();
-	LCD_Cmd(_LCD_CURSOR_OFF);
-
-
+	u8 data;
+	SPI_Init();
 	Led_INIT();
-
-	Timer0_Configure(NORMAL_MODE, NORMAL_OPERATION, CLK_1024_PRESCALER, 0, 0);
-
-	WDG_ON();
-
 	while(1){
-		value = Adc_StartConversion(RIGHT_ADJUSTED);
-		LCD_GoToRowColumn(1,2);
-		itoa(value,buffer,10);   //function to convert any number to ascii
-		LCD_DisplayStr(buffer);
-
+		data= SPI_Receive();
+		if(data == 'm'){
+			Led_Toggle(LED0);
+		}
 
 	}
+
 }
+
+//
+//int main(void){
+//	UART_Init();
+//	Led_INIT();
+//	Button_INIT();
+//	UART_TxStr("Hello Mohamed");
+//	while(1){
+//
+//		if(UART_RxChar()=='m'){
+//			Led_Toggle(LED0);
+//		}
+//		if(UART_RxChar()=='n'){
+//			Led_Toggle(LED1);
+//		}
+//
+//		if(Button_READ(BUTTON0)==PRESSED){
+//			UART_TxChar('n');
+//			_delay_ms(250);
+//		}
+//		if(Button_READ(BUTTON1)==PRESSED){
+//			UART_TxChar('m');
+//			_delay_ms(250);
+//		}
+//		if(Button_READ(BUTTON2)==PRESSED){
+//			UART_TxChar('l');
+//			_delay_ms(250);
+//		}
+//
+//
+//
+//
+//
+////		if(UART_RxChar()=='s'){
+////			Led_Toggle(LED1);
+////		}
+//	}
+//}
+
+
+//int main(void){
+//	u8 buffer[10];
+//
+//
+//	u16 value;
+//	Adc_Configure(AVCC, DIV_FACTOR_128, ADC_POLLING);
+//	Adc_Channel_Sel(ADC1);
+//
+//	LCD_Init();
+//	LCD_Cmd(_LCD_CURSOR_OFF);
+//
+//
+//	Led_INIT();
+//
+//	Timer0_Configure(NORMAL_MODE, NORMAL_OPERATION, CLK_1024_PRESCALER, 0, 0);
+//
+//	WDG_ON();
+//
+//	while(1){
+//		value = Adc_StartConversion(RIGHT_ADJUSTED);
+//		LCD_GoToRowColumn(1,2);
+//		itoa(value,buffer,10);   //function to convert any number to ascii
+//		LCD_DisplayStr(buffer);
+//
+//
+//	}
+//}
 
 //int main(void){
 //	while(1){
